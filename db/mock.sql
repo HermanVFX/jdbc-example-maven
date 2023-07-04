@@ -24,3 +24,27 @@ select
     COLUMN_TYPE
 from TABLE_COLS
     where lower(COLUMN_NAME) in (select lower(PK) from TABLE_LIST);
+
+select
+    TABLE_NAME,
+    COLUMN_NAME,
+    COLUMN_TYPE
+from TABLE_COLS
+where lower(COLUMN_NAME) in (select lower(PK) from TABLE_LIST)
+   or lower(COLUMN_NAME) in (select lower( SUBSTRING(PK ,0 , INSTR(PK, ', ') - 1)) from TABLE_LIST)
+   or lower(COLUMN_NAME) in (select lower( SUBSTRING(PK ,INSTR(PK, ', ') + 2)) from TABLE_LIST);
+
+select
+    TABLE_NAME,
+    (select PK from TABLE_LIST
+     where LOWER(TABLE_LIST.TABLE_NAME) = LOWER(TABLE_COLS.TABLE_NAME)
+       and lower(SUBSTRING(PK ,0 , INSTR(PK, ', ') - 1)) = LOWER(COLUMN_NAME)
+        or lower( SUBSTRING(PK ,INSTR(PK, ', ') + 2)) = LOWER(COLUMN_NAME)
+        or LOWER(PK) = LOWER(COLUMN_NAME)) as COLUMN_NAME,
+    COLUMN_TYPE
+from TABLE_COLS
+where (select PK from TABLE_LIST
+       where LOWER(TABLE_LIST.TABLE_NAME) = LOWER(TABLE_COLS.TABLE_NAME)
+           and lower(SUBSTRING(PK ,0 , INSTR(PK, ', ') - 1)) = LOWER(COLUMN_NAME)
+          or lower( SUBSTRING(PK ,INSTR(PK, ', ') + 2)) = LOWER(COLUMN_NAME)
+          or LOWER(PK) = LOWER(COLUMN_NAME))  is not null;

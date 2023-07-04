@@ -10,28 +10,22 @@ public class RepositoryImpl implements Repository {
 
     private final Connection connection = getConnection();
 
-//    private final static String SQL_QUERY = "select " +
-//            "    TABLE_NAME, " +
-//            "    (select PK from TABLE_LIST " +
-//            "               where LOWER(TABLE_LIST.TABLE_NAME) = LOWER(TABLE_COLS.TABLE_NAME) " +
-//            "                 and LOWER(PK) = LOWER(COLUMN_NAME)) as COLUMN_NAME, " +
-//            "    COLUMN_TYPE " +
-//            "from TABLE_COLS;";
-
-    private final static String SQL_QUERY_SECOND = "select " +
+    private final static String SQL_QUERY = "select " +
             "    TABLE_NAME, " +
             "    COLUMN_NAME, " +
             "    COLUMN_TYPE " +
             "from TABLE_COLS " +
-            "    where lower(COLUMN_NAME) in (select lower(PK) from TABLE_LIST);";
+            "where lower(COLUMN_NAME) in (select lower(PK) from TABLE_LIST) " +
+            "   or lower(COLUMN_NAME) in (select lower( SUBSTRING(PK ,0 , INSTR(PK, ', ') - 1)) from TABLE_LIST) " +
+            "   or lower(COLUMN_NAME) in (select lower( SUBSTRING(PK ,INSTR(PK, ', ') + 2)) from TABLE_LIST)";
 
     @Override
     public String getContent() {
-        Statement statement = null;
+        Statement statement;
         StringBuilder builder = new StringBuilder();
         try {
             statement = connection.createStatement();
-            var resultSet = statement.executeQuery(SQL_QUERY_SECOND);
+            var resultSet = statement.executeQuery(SQL_QUERY);
 
             while (resultSet.next()) {
                 builder.append(resultSet.getString("TABLE_NAME"))
